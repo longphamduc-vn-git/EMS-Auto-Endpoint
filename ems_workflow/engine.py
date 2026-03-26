@@ -182,6 +182,10 @@ class WorkflowWorker(QThread):
             if not name or ext.get("type", "JSON_PATH") != "JSON_PATH":
                 continue
             vals = jsonpath_values(source, ext.get("value", ""))
+            if not vals and 'reponse' in ext.get("value", ""):
+                corrected_path = ext.get("value", "").replace('reponse', 'response')
+                vals = jsonpath_values(source, corrected_path)
+
             # Unwrap list-of-list khi JSONPath trả về [[...]]
             if len(vals) == 1 and isinstance(vals[0], list):
                 vals = vals[0]
@@ -329,22 +333,26 @@ class WorkflowWorker(QThread):
                         f"[DEBUG] HTTP step={step_name} cached_items={len(step_data.get('items', []))}"
                     )
 
+            self.log(
+                f"[DEBUG--] HTTP step={step_name} xml_payload={xml_payload}"
+            )
             if step_data is None:
                 resp_xml = self.request_with_retry(method, url, xml_payload)
-                self.log(
-                    f"[DEBUG] HTTP step={step_name} response_xml_size={len(resp_xml)} response_preview={resp_xml[:200]}"
-                )
+
                 resp_json = nexacro_xml_to_json(resp_xml)
+          
+                
                 self.log(
                     f"[DEBUG] HTTP step={step_name} parsed_response={self._to_json_preview(resp_json, 400)}"
                 )
+                
                 step_data = self.apply_extracts(extracts, resp_json)
                 self.log(
-                    f"[DEBUG] HTTP step={step_name} iteration={idx + 1}/{len(loop_items)} "
-                    f"items={len(step_data.get('items', []))}"
+                    f"[DEBUG] HTTP step={step_name} iteration={idx + 1}/{len(loop_items)}"
                 )
                 if use_cache:
                     self.write_cache(cache_key, step_data)
+
 
             # Gộp kết quả vào aggregate
             for row in step_data.get("items", []):
@@ -356,6 +364,7 @@ class WorkflowWorker(QThread):
                     aggregate_cols.setdefault(k, []).extend(v)
 
         result: Dict[str, Any] = dict(aggregate_cols)
+    
         result["items"] = aggregate_rows
         self.log(
             f"[DEBUG] HTTP step={step_name} aggregate_items={len(aggregate_rows)}"
@@ -373,10 +382,15 @@ class WorkflowWorker(QThread):
           - Thực hiện INNER_JOIN theo joinKeys.
           - Áp dụng extracts (JSON_PATH hoặc CALCULATION) trên mỗi cặp row.
         """
+
         inputs = step.get("inputs", {})
         mapping = step.get("mapping", {})
         extracts = normalize_extracts(step.get("extracts"))
 
+        self.log(
+            f"[DEBUG] inputs {inputs} mapping {mapping} extracts={extracts}"
+        )
+        
         src_a = flatten_single(jsonpath_values(context, inputs.get("sourceA", "")))
         src_b = flatten_single(jsonpath_values(context, inputs.get("sourceB", "")))
         self.log(
