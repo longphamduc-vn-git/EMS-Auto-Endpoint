@@ -1,0 +1,209 @@
+[
+  {
+    "name": "process_inventory_import_mock",
+    "label": "Mock Nexacro Workflow",
+    "description": "Workflow test local voi mock Nexacro API",
+    "parameters": {
+      "session": {
+        "organizationId": "28753",
+        "itemCond": "Y",
+        "optimizeFlag": "Y",
+        "optimizedApplyDate": "20210316",
+        "auth_token": "mock-token"
+      }
+    },
+    "steps": [
+      {
+        "name": "input_items",
+        "label": "Nhap thong tin lo hang",
+        "type": "INPUT",
+        "fields": [
+          {
+            "label": "Q code",
+            "name": "items"
+          }
+        ]
+      },
+      {
+        "name": "RetStockStatusList",
+        "label": "Lay danh sach san pham",
+        "type": "HTTP_REQUEST",
+        "loopOver": null,
+        "cache": true,
+        "accumulation": true,
+        "url": "http://localhost:9000/emsspareparts/sp101/sp110Nav/RetStockStatusList.lgdn",
+        "method": "POST",
+        "payload": {
+          "parameters": {
+            "_ems_userId": "$.session.auth_token",
+            "_ems_organizationId": "$.session.organizationId",
+            "_ems_language": "vi"
+          },
+          "datasets": [
+            {
+              "id": "ds_search",
+              "fields": [
+                {
+                  "name": "organizationId",
+                  "value": "$.session.organizationId"
+                },
+                {
+                  "name": "itemCond",
+                  "value": "$.session.itemCond"
+                },
+                {
+                  "name": "optimizedApplyDate",
+                  "value": "$.session.optimizedApplyDate"
+                }
+              ]
+            },
+            {
+              "id": "ds_ItemInfo",
+              "fields": [
+                {
+                  "name": "item",
+                  "value": "$.input_items.items[*]"
+                }
+              ]
+            }
+          ]
+        },
+        "extracts": [
+          {
+            "label": "Item",
+            "name": "item",
+            "type": "JSON_PATH",
+            "value": "$.reponse.item[*]"
+          },
+          {
+            "label": "Item Name",
+            "name": "itemName",
+            "type": "JSON_PATH",
+            "value": "$.reponse.itemName[*]"
+          },
+          {
+            "label": "Organization ID",
+            "name": "organizationId",
+            "type": "JSON_PATH",
+            "value": "$.reponse.organizationId[*]"
+          },
+          {
+            "label": "Inventory Item ID",
+            "name": "inventoryItemId",
+            "type": "JSON_PATH",
+            "value": "$.reponse.inventoryItemId[*]"
+          },
+          {
+            "label": "Available Quantity",
+            "name": "availableQuantity",
+            "type": "JSON_PATH",
+            "value": "$.reponse.availableQuantity[*]"
+          }
+        ]
+      },
+      {
+        "name": "update_each_item",
+        "label": "Cap nhat kho chi tiet",
+        "type": "HTTP_REQUEST",
+        "loopOver": "$.RetStockStatusList.items",
+        "cache": false,
+        "accumulation": true,
+        "url": "http://localhost:9000/emsspareparts/sp102/sp135Nav/retrieveItemInfoDetail.lgdn",
+        "method": "POST",
+        "payload": {
+          "parameters": {
+            "_ems_userId": "$.session.auth_token",
+            "_ems_organizationId": "$.session.organizationId",
+            "_ems_language": "vi"
+          },
+          "datasets": [
+            {
+              "id": "ds_Input",
+              "fields": [
+                {
+                  "name": "organizationId",
+                  "value": "$.session.organizationId"
+                },
+                {
+                  "name": "inventoryItemId",
+                  "source": "$.RetStockStatusList.inventoryItemId"
+                }
+              ]
+            }
+          ]
+        },
+        "extracts": [
+          {
+            "label": "Inventory Item ID",
+            "name": "inventoryItemId",
+            "type": "JSON_PATH",
+            "value": "$.reponse.inventoryItemId[*]"
+          },
+          {
+            "label": "Item",
+            "name": "item",
+            "type": "JSON_PATH",
+            "value": "$.reponse.item[*]"
+          },
+          {
+            "label": "Description",
+            "name": "description",
+            "type": "JSON_PATH",
+            "value": "$.reponse.description[*]"
+          },
+          {
+            "label": "Item Status",
+            "name": "itemStatus",
+            "type": "JSON_PATH",
+            "value": "$.reponse.itemStatus[*]"
+          }
+        ]
+      },
+      {
+        "name": "match_inventory_data",
+        "label": "Khop du lieu tong hop",
+        "type": "DATA_MAPPING",
+        "description": "Ghep noi du lieu tu RetStockStatusList va update_each_item",
+        "inputs": {
+          "sourceA": "$.RetStockStatusList",
+          "sourceB": "$.update_each_item"
+        },
+        "mapping": {
+          "joinType": "INNER_JOIN",
+          "joinKeys": [
+            {
+              "leftKey": "inventoryItemId",
+              "rightKey": "inventoryItemId"
+            }
+          ]
+        },
+        "extracts": [
+          {
+            "label": "Item Code",
+            "name": "item",
+            "type": "JSON_PATH",
+            "value": "$.sourceA.item"
+          },
+          {
+            "label": "Inventory Item ID",
+            "name": "inventoryItemId",
+            "type": "JSON_PATH",
+            "value": "$.sourceA.inventoryItemId"
+          },
+          {
+            "label": "Item Description",
+            "name": "description",
+            "type": "JSON_PATH",
+            "value": "$.sourceB.description"
+          },
+          {
+            "label": "Item Status",
+            "name": "itemStatus",
+            "type": "CALCULATION",
+            "value": "$.sourceB.itemStatus = 'Active' && $.sourceA.availableQuantity > 0 ? 'In Stock' : 'Out of Stock'"
+          }
+        ]
+      }
+    ]
+  }
+]

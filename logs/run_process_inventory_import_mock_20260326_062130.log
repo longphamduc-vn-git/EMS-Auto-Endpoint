@@ -1,0 +1,55 @@
+Run started: 2026-03-26T06:21:30.736206
+[2026-03-26 06:21:30] === RUN STARTED === 2026-03-26T06:21:30.736206
+[2026-03-26 06:21:30] Task=process_inventory_import_mock steps=4
+[2026-03-26 06:21:30] Input keys: items
+[2026-03-26 06:21:30] Input[items] count=5 sample=['Q000001', 'Q000002', 'Q000003', 'Q000004', 'Q000005']
+[2026-03-26 06:21:30] Bắt đầu chạy workflow…
+[2026-03-26 06:21:30] [06:21:30] Task start: name=process_inventory_import_mock steps=4
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] session={"organizationId": "28753", "itemCond": "Y", "optimizeFlag": "Y", "optimizedApplyDate": "20210316", "auth_token": "***MASKED***"}
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] INPUT registered step=input_items data={"items": ["Q000001", "Q000002", "Q000003", "Q000004", "Q000005"]}
+[2026-03-26 06:21:30] Step bắt đầu: input_items
+[2026-03-26 06:21:30] [06:21:30] ▶ Step: input_items [INPUT]
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] Step config input_items: {"name": "input_items", "label": "Nhap thong tin lo hang", "type": "INPUT", "fields": [{"label": "Q code", "name": "items"}]}
+[2026-03-26 06:21:30] Step hoàn thành: input_items [INPUT]
+[2026-03-26 06:21:30] [DEBUG] step=input_items keys=[items] items_type=list
+[2026-03-26 06:21:30] [DEBUG] step=input_items INPUT rows=5 (skip output render)
+[2026-03-26 06:21:30] Step bắt đầu: RetStockStatusList
+[2026-03-26 06:21:30] [06:21:30] ▶ Step: RetStockStatusList [HTTP_REQUEST]
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] Step config RetStockStatusList: {"name": "RetStockStatusList", "label": "Lay danh sach san pham", "type": "HTTP_REQUEST", "loopOver": null, "cache": true, "accumulation": true, "url": "http://localhost:9000/emsspareparts/sp101/sp110Nav/RetStockStatusList.lgdn", "method": "POST", "payload": {"parameters": {"_ems_userId": "$.session.auth_token", "_ems_organizationId": "$.session.organizationId", "_ems_language": "vi"}, "datasets": [{"id": "ds_search", "fields": [{"name": "organizationId", "value": "$.session.organizationId"}, {"name": "itemCond", "value": "$.session.itemCond"}, {"name": "optimizedApplyDate", "value": "$.sessio...
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] HTTP step=RetStockStatusList method=POST loop_count=1 extracts=5
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] HTTP step=RetStockStatusList iteration=1/1 payload=ds_search rows=1 fields=['organizationId', 'itemCond', 'optimizedApplyDate']; ds_ItemInfo rows=5 fields=['item']
+[2026-03-26 06:21:30] [06:21:30] [DEBUG] HTTP step=RetStockStatusList cache_key=9c80edbeb2a8 payload_size=945
+[2026-03-26 06:21:32] [06:21:32] [DEBUG] HTTP step=RetStockStatusList response_xml_size=2493 response_preview=<?xml version="1.0" encoding="UTF-8"?>
+<Root xmlns="http://www.nexacroplatform.com/platform/dataset">
+    <Parameters>
+        <Parameter id="ErrorCode">0</Parameter>
+        <Parameter id="ErrorMsg">
+[2026-03-26 06:21:33] [06:21:32] [DEBUG] HTTP step=RetStockStatusList parsed_response={"reponse": {}, "datasets": {}, "items": []}
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] HTTP step=RetStockStatusList iteration=1/1 items=0
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] HTTP step=RetStockStatusList aggregate_items=0
+[2026-03-26 06:21:33] Step hoàn thành: RetStockStatusList [HTTP_REQUEST]
+[2026-03-26 06:21:33] [DEBUG] step=RetStockStatusList keys=[item, itemName, organizationId, inventoryItemId, availableQuantity, items] items_type=list
+[2026-03-26 06:21:33] [DEBUG] step=RetStockStatusList rows_ready=0 first_row_type=none
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] accumulation step=RetStockStatusList appended=0 total=0 file=E:\EMS Auto Endpoint\accumulated_data.json
+[2026-03-26 06:21:33] Step bắt đầu: update_each_item
+[2026-03-26 06:21:33] [06:21:33] ▶ Step: update_each_item [HTTP_REQUEST]
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] Step config update_each_item: {"name": "update_each_item", "label": "Cap nhat kho chi tiet", "type": "HTTP_REQUEST", "loopOver": "$.RetStockStatusList.items", "cache": false, "accumulation": true, "url": "http://localhost:9000/emsspareparts/sp102/sp135Nav/retrieveItemInfoDetail.lgdn", "method": "POST", "payload": {"parameters": {"_ems_userId": "$.session.auth_token", "_ems_organizationId": "$.session.organizationId", "_ems_language": "vi"}, "datasets": [{"id": "ds_Input", "fields": [{"name": "organizationId", "value": "$.session.organizationId"}, {"name": "inventoryItemId", "source": "$.RetStockStatusList.inventoryItemId"}...
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] HTTP step=update_each_item method=POST loop_count=0 extracts=4
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] HTTP step=update_each_item aggregate_items=0
+[2026-03-26 06:21:33] Step hoàn thành: update_each_item [HTTP_REQUEST]
+[2026-03-26 06:21:33] [DEBUG] step=update_each_item keys=[items] items_type=list
+[2026-03-26 06:21:33] [DEBUG] step=update_each_item rows_ready=0 first_row_type=none
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] accumulation step=update_each_item appended=0 total=0 file=E:\EMS Auto Endpoint\accumulated_data.json
+[2026-03-26 06:21:33] Step bắt đầu: match_inventory_data
+[2026-03-26 06:21:33] [06:21:33] ▶ Step: match_inventory_data [DATA_MAPPING]
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] Step config match_inventory_data: {"name": "match_inventory_data", "label": "Khop du lieu tong hop", "type": "DATA_MAPPING", "description": "Ghep noi du lieu tu RetStockStatusList va update_each_item", "inputs": {"sourceA": "$.RetStockStatusList", "sourceB": "$.update_each_item"}, "mapping": {"joinType": "INNER_JOIN", "joinKeys": [{"leftKey": "inventoryItemId", "rightKey": "inventoryItemId"}]}, "extracts": [{"label": "Item Code", "name": "item", "type": "JSON_PATH", "value": "$.sourceA.item"}, {"label": "Inventory Item ID", "name": "inventoryItemId", "type": "JSON_PATH", "value": "$.sourceA.inventoryItemId"}, {"label": "Item D...
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] MAP step=match_inventory_data sourceA_type=dict sourceB_type=dict
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] MAP step=match_inventory_data left=0 right=0 merged=0
+[2026-03-26 06:21:33] [06:21:33] [DEBUG] MAP step=match_inventory_data output_items=0
+[2026-03-26 06:21:33] Step hoàn thành: match_inventory_data [DATA_MAPPING]
+[2026-03-26 06:21:33] [DEBUG] step=match_inventory_data keys=[items] items_type=list
+[2026-03-26 06:21:33] [DEBUG] step=match_inventory_data rows_ready=0 first_row_type=none
+[2026-03-26 06:21:33] Workflow hoàn thành.
+[2026-03-26 06:21:33] === RUN COMPLETED ===
+[2026-03-26 06:21:33] Log file: E:\EMS Auto Endpoint\logs\run_process_inventory_import_mock_20260326_062130.log
+[2026-03-26 06:21:33] [06:21:33] Task completed: context_keys=['session', 'input_items', 'RetStockStatusList', 'update_each_item', 'match_inventory_data']
