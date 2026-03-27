@@ -387,12 +387,9 @@ class WorkflowWorker(QThread):
         mapping = step.get("mapping", {})
         extracts = normalize_extracts(step.get("extracts"))
 
-        self.log(
-            f"[DEBUG] inputs {inputs} mapping {mapping} extracts={extracts}"
-        )
-        
         src_a = flatten_single(jsonpath_values(context, inputs.get("sourceA", "")))
         src_b = flatten_single(jsonpath_values(context, inputs.get("sourceB", "")))
+
         self.log(
             f"[DEBUG] MAP step={step.get('name', 'mapping')} sourceA_type={type(src_a).__name__} sourceB_type={type(src_b).__name__}"
         )
@@ -408,6 +405,8 @@ class WorkflowWorker(QThread):
             else dict_of_lists_to_records(src_b) if isinstance(src_b, dict)
             else []
         )
+
+       
 
         join_type = mapping.get("joinType", "INNER_JOIN")
         join_keys = mapping.get("joinKeys", [])
